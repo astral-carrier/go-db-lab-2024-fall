@@ -5,6 +5,7 @@ package godb
 
 import (
 	"bytes"
+	"encoding/binary"
 	"fmt"
 	"strconv"
 	"strings"
@@ -47,9 +48,18 @@ type TupleDesc struct {
 // all of their field objects are equal and they
 // are the same length
 func (d1 *TupleDesc) equals(d2 *TupleDesc) bool {
-	// TODO: some code goes here
-	return true
+	if len(d1.Fields) != len(d2.Fields) {
+		return false
+	}
 
+	for index, field := range d1.Fields {
+		if field.Ftype != d2.Fields[index].Ftype || field.Fname != d2.Fields[index].Fname ||
+			field.TableQualifier != d2.Fields[index].TableQualifier {
+			return false
+		}
+	}
+
+	return true
 }
 
 // Hint: heap_page need function there:  (desc *TupleDesc) bytesPerTuple() int
@@ -84,8 +94,14 @@ func findFieldInTd(field FieldType, desc *TupleDesc) (int, error) {
 // another slice object does not make a copy of the contents of the slice.
 // Look at the built-in function "copy".
 func (td *TupleDesc) copy() *TupleDesc {
-	// TODO: some code goes here
-	return &TupleDesc{} //replace me
+	copied := new(TupleDesc)
+	copiedFields := make([]FieldType, len(td.Fields))
+
+	copy(copiedFields, td.Fields)
+
+	copied.Fields = copiedFields
+
+	return copied
 }
 
 // Assign the TableQualifier of every field in the TupleDesc to be the
@@ -104,8 +120,11 @@ func (td *TupleDesc) setTableAlias(alias string) {
 // should consist of the fields of desc2
 // appended onto the fields of desc.
 func (desc *TupleDesc) merge(desc2 *TupleDesc) *TupleDesc {
-	// TODO: some code goes here
-	return &TupleDesc{} //replace me
+	merged := new(TupleDesc)
+
+	merged.Fields = append(desc.Fields, desc2.Fields...)
+
+	return merged
 }
 
 // ================== Tuple Methods ======================
@@ -151,8 +170,15 @@ type recordID interface {
 // May return an error if the buffer has insufficient capacity to store the
 // tuple.
 func (t *Tuple) writeTo(b *bytes.Buffer) error {
-	// TODO: some code goes here
-	return fmt.Errorf("writeTo not implemented") //replace me
+	for _, field := range t.Fields {
+		bufferWriteError := binary.Write(b, binary.LittleEndian, field)
+
+		if bufferWriteError != nil {
+			return bufferWriteError
+		}
+	}
+
+	return nil
 }
 
 // Read the contents of a tuple with the specified [TupleDesc] from the
@@ -169,7 +195,6 @@ func (t *Tuple) writeTo(b *bytes.Buffer) error {
 // May return an error if the buffer has insufficent data to deserialize the
 // tuple.
 func readTupleFrom(b *bytes.Buffer, desc *TupleDesc) (*Tuple, error) {
-	// TODO: some code goes here
 	return nil, fmt.Errorf("readTupleFrom not implemented") //replace me
 }
 
@@ -178,7 +203,16 @@ func readTupleFrom(b *bytes.Buffer, desc *TupleDesc) (*Tuple, error) {
 // the [TupleDesc.equals] method, but fields can be compared directly with equality
 // operators.
 func (t1 *Tuple) equals(t2 *Tuple) bool {
-	// TODO: some code goes here
+	if !t1.Desc.equals(&t2.Desc) {
+		return false
+	}
+
+	for index, field := range t1.Fields {
+		if t2.Fields[index] != field {
+			return false
+		}
+	}
+
 	return true
 }
 
@@ -187,7 +221,12 @@ func (t1 *Tuple) equals(t2 *Tuple) bool {
 // by merging the descriptions of the two input tuples.
 func joinTuples(t1 *Tuple, t2 *Tuple) *Tuple {
 	// TODO: some code goes here
-	return &Tuple{} //replace me
+	joinedTuple := new(Tuple)
+
+	joinedTuple.Desc = *t1.Desc.merge(&t2.Desc)
+	joinedTuple.Fields = append(t1.Fields, t2.Fields...)
+
+	return joinedTuple
 }
 
 type orderByState int

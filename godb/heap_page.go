@@ -51,6 +51,7 @@ dirty page, it's OK if tuples are renumbered when they are written back to disk.
 type heapPage struct {
 	// TODO: some code goes here
 	sync.Mutex
+	pageNo int
 }
 
 // Construct a new heap page

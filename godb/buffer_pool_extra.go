@@ -30,7 +30,7 @@ func (bp *BufferPool) Rollback(tid TransactionID) error {
 		if record.Type() == UpdateRecord {
 			switch b := record.(*UpdateLogRecord).Before.(type) {
 			case *heapPage:
-				delete(bp.pages, b.getFile().pageKey(b.PageNo()))
+				// delete(bp.pages, b.getFile().pageKey(b.PageNo()))
 				b.getFile().flushPage(b)
 			default:
 				return fmt.Errorf("unexpected page type")
@@ -80,7 +80,7 @@ func (bp *BufferPool) Recover(logFile *LogFile) error {
 			after := updateRecord.After.(*heapPage)
 			pageKey := after.getFile().pageKey(after.PageNo())
 			log.Printf("REDO %v", pageKey)
-			delete(bp.pages, pageKey)
+			// delete(bp.pages, pageKey)
 			if err := after.getFile().flushPage(after); err != nil {
 				return err
 			}
@@ -107,7 +107,7 @@ func (bp *BufferPool) Recover(logFile *LogFile) error {
 				page := updateRecord.Before.(*heapPage)
 				pageKey := page.getFile().pageKey(page.PageNo())
 				log.Printf("UNDO %v", pageKey)
-				delete(bp.pages, pageKey)
+				// delete(bp.pages, pageKey)
 				if err := page.getFile().flushPage(page); err != nil {
 					return err
 				}
