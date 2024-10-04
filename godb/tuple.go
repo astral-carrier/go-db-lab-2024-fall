@@ -171,7 +171,30 @@ type recordID interface {
 // tuple.
 func (t *Tuple) writeTo(b *bytes.Buffer) error {
 	for _, field := range t.Fields {
-		bufferWriteError := binary.Write(b, binary.LittleEndian, field)
+		var valToWrite any
+
+		switch field.(type) {
+		case StringField:
+			// convert string fields to byte
+			stringBytes := []byte(field.(StringField).Value)
+			unpaddedLen := len(stringBytes)
+
+			// println(field.(StringField).Value)
+
+			// pad with 0s so it's StringLength length
+			for iteration := 0; iteration < StringLength-unpaddedLen; iteration++ {
+				stringBytes = append(stringBytes, 0)
+			}
+
+			valToWrite = stringBytes
+		case IntField:
+			// no need to do anything for int fields
+			valToWrite = field.(IntField).Value
+
+			// println(field.(IntField).Value)
+		}
+
+		bufferWriteError := binary.Write(b, binary.LittleEndian, valToWrite)
 
 		if bufferWriteError != nil {
 			return bufferWriteError
@@ -195,7 +218,60 @@ func (t *Tuple) writeTo(b *bytes.Buffer) error {
 // May return an error if the buffer has insufficent data to deserialize the
 // tuple.
 func readTupleFrom(b *bytes.Buffer, desc *TupleDesc) (*Tuple, error) {
-	return nil, fmt.Errorf("readTupleFrom not implemented") //replace me
+	data := make([]byte, len(b.Bytes()))
+	tuple := new(Tuple)
+	tuple.Desc = *desc.copy()
+
+	readError := binary.Read(bytes.NewReader(b.Bytes()), binary.LittleEndian, data)
+
+	if readError != nil {
+		return nil, readError
+	}
+
+	tuple.Fields = make([]DBValue, len(desc.Fields))
+
+	dataIndex := 0
+
+	for fieldIndex, fieldType := range desc.Fields {
+		switch fieldType.Ftype {
+		case StringType:
+			nextZeroIndex := dataIndex
+
+			// search for the next zero up to StringLength ahead
+			for ; data[nextZeroIndex] != 0 && nextZeroIndex < dataIndex+StringLength; nextZeroIndex++ {
+			}
+
+			// convert bytes array to string
+			stringVal := string(data[dataIndex:nextZeroIndex])
+
+			// println(stringVal)
+
+			// create the string field
+			field := new(StringField)
+			field.Value = stringVal
+
+			// pretty sure this works
+			tuple.Fields[dataIndex] = field
+
+			// advance to the next block
+			dataIndex += StringLength
+		case IntType:
+			// always 8 bytes long
+			intVal := binary.LittleEndian.Uint64(data[dataIndex : dataIndex+8])
+
+			field := new(IntField)
+			field.Value = int64(intVal)
+
+			// println(field.Value)
+
+			// p sure this works
+			tuple.Fields[fieldIndex] = field
+
+			dataIndex += 8
+		}
+	}
+
+	return tuple, nil
 }
 
 // Compare two tuples for equality.  Equality means that the TupleDescs are equal
@@ -204,12 +280,25 @@ func readTupleFrom(b *bytes.Buffer, desc *TupleDesc) (*Tuple, error) {
 // operators.
 func (t1 *Tuple) equals(t2 *Tuple) bool {
 	if !t1.Desc.equals(&t2.Desc) {
+		// println("descs not equal")
+
 		return false
 	}
 
 	for index, field := range t1.Fields {
-		if t2.Fields[index] != field {
-			return false
+		switch field.(type) {
+		case IntField:
+			if t2.Fields[index].(IntField).Value != field.(IntField).Value {
+				// println("int fields not equal", index)
+
+				return false
+			}
+		case StringField:
+			if t2.Fields[index].(StringField).Value != field.(StringField).Value {
+				// println("string fields not equal", index)
+
+				return false
+			}
 		}
 	}
 
