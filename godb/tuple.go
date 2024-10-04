@@ -309,10 +309,15 @@ func (t1 *Tuple) equals(t2 *Tuple) bool {
 // appended to t1. The new tuple should have a correct TupleDesc that is created
 // by merging the descriptions of the two input tuples.
 func joinTuples(t1 *Tuple, t2 *Tuple) *Tuple {
-	// TODO: some code goes here
+	if t2 == nil {
+		return t1
+	} else if t1 == nil {
+		return t2
+	}
+
 	joinedTuple := new(Tuple)
 
-	joinedTuple.Desc = *t1.Desc.merge(&t2.Desc)
+	joinedTuple.Desc = *(t1.Desc.merge(&t2.Desc))
 	joinedTuple.Fields = append(t1.Fields, t2.Fields...)
 
 	return joinedTuple
@@ -341,8 +346,46 @@ const (
 // Note that EvalExpr uses the [Tuple.project] method, so you will need
 // to implement projection before testing compareField.
 func (t *Tuple) compareField(t2 *Tuple, field Expr) (orderByState, error) {
-	// TODO: some code goes here
-	return OrderedEqual, fmt.Errorf("compareField not implemented") // replace me
+	tField, tEvalError := field.EvalExpr(t)
+
+	if tEvalError != nil {
+		return OrderedEqual, tEvalError
+	}
+
+	t2Field, t2EvalError := field.EvalExpr(t2)
+
+	if t2EvalError != nil {
+		return OrderedEqual, t2EvalError
+	}
+
+	var status orderByState
+
+	switch tField.(type) {
+	case IntField:
+		tValue := tField.(IntField).Value
+		t2Value := t2Field.(IntField).Value
+
+		if tValue < t2Value {
+			status = OrderedLessThan
+		} else if tValue == t2Value {
+			status = OrderedEqual
+		} else {
+			status = OrderedGreaterThan
+		}
+	case StringField:
+		tValue := tField.(StringField).Value
+		t2Value := t2Field.(StringField).Value
+
+		if tValue < t2Value {
+			status = OrderedLessThan
+		} else if tValue == t2Value {
+			status = OrderedEqual
+		} else {
+			status = OrderedGreaterThan
+		}
+	}
+
+	return status, nil
 }
 
 // Project out the supplied fields from the tuple. Should return a new Tuple
@@ -353,7 +396,35 @@ func (t *Tuple) compareField(t2 *Tuple, field Expr) (orderByState, error) {
 // entry t2.name in t, but only if there is not an entry t1.name in t)
 func (t *Tuple) project(fields []FieldType) (*Tuple, error) {
 	// TODO: some code goes here
-	return nil, fmt.Errorf("project not implemented") //replace me
+	projection := new(Tuple)
+
+	projection.Desc = *new(TupleDesc)
+	projection.Desc.Fields = fields
+
+	for _, requestedField := range fields {
+		var twoMatch DBValue
+
+		for ogFieldIndex, ogField := range t.Desc.Fields {
+			if ogField.Ftype == requestedField.Ftype && ogField.Fname == requestedField.Fname {
+				// match all 3 = instant add
+				if ogField.TableQualifier == requestedField.TableQualifier {
+					projection.Fields = append(projection.Fields, t.Fields[ogFieldIndex])
+
+					// only way to break while also skipping using twoMatch
+					twoMatch = nil
+					break
+				} else {
+					twoMatch = t.Fields[ogFieldIndex]
+				}
+			}
+		}
+
+		if twoMatch != nil {
+			projection.Fields = append(projection.Fields, twoMatch)
+		}
+	}
+
+	return projection, nil
 }
 
 // Compute a key for the tuple to be used in a map structure
