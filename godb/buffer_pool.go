@@ -5,10 +5,6 @@ package godb
 //It is also the primary way in which transactions are enforced, by using page
 //level locking (you will not need to worry about this until lab3).
 
-import (
-	"fmt"
-)
-
 // Permissions used to when reading / locking pages
 type RWPerm int
 
@@ -18,15 +14,20 @@ const (
 )
 
 type BufferPool struct {
-	// TODO: some code goes here
-	logFile *LogFile
-	pages   *Page
+	logFile  *LogFile
+	pages    map[any]Page
+	maxPages int
+	curID    TransactionID
 }
 
 // Create a new BufferPool with the specified number of pages
 func NewBufferPool(numPages int) (*BufferPool, error) {
-	// TODO: some code goes here
-	return &BufferPool{}, fmt.Errorf("NewBufferPool not implemented") // replace me
+	pool := new(BufferPool)
+
+	pool.pages = make(map[any]Page)
+	pool.maxPages = numPages
+
+	return pool, nil
 }
 
 // Testing method -- iterate through all pages in the buffer pool
@@ -57,6 +58,18 @@ func (bp *BufferPool) BeginTransaction(tid TransactionID) error {
 	return nil
 }
 
+func (bp *BufferPool) evictPage() error {
+	for key, page := range bp.pages {
+		if !page.isDirty() {
+			delete(bp.pages, key)
+
+			return nil
+		}
+	}
+
+	return GoDBError{BufferPoolFullError, "Buffer pool full with dirty pages"}
+}
+
 // Retrieve the specified page from the specified DBFile (e.g., a HeapFile), on
 // behalf of the specified transaction. If a page is not cached in the buffer pool,
 // you can read it from disk uing [DBFile.readPage]. If the buffer pool is full (i.e.,
@@ -69,8 +82,27 @@ func (bp *BufferPool) BeginTransaction(tid TransactionID) error {
 // implement locking or deadlock detection. You will likely want to store a list
 // of pages in the BufferPool in a map keyed by the [DBFile.pageKey].
 func (bp *BufferPool) GetPage(file DBFile, pageNo int, tid TransactionID, perm RWPerm) (Page, error) {
-	// TODO: some code goes here
-	return nil, fmt.Errorf("GetPage not implemented") // replace me
+	if page, exists := bp.pages[file.pageKey(pageNo)]; exists {
+		return page, nil
+	}
+
+	page, readPageError := file.readPage(pageNo)
+
+	if readPageError != nil {
+		return nil, readPageError
+	}
+
+	if len(bp.pages) >= bp.maxPages {
+		evictError := bp.evictPage()
+
+		if evictError != nil {
+			return nil, evictError
+		}
+	}
+
+	bp.pages[file.pageKey(pageNo)] = page
+
+	return page, nil
 }
 
 // Hint: GetPage function need function there: func (bp *BufferPool) evictPage() error
