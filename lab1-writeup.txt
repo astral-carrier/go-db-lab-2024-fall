@@ -1,0 +1,8 @@
+There were no API changes for this assignment.
+
+I did not finish the section for heap files due to time constraints. The buffer pool and heap page code is also untested
+as a result, since the tests for both requires the completion of heap files.
+
+I estimate that I spent about 12 hours on this lab. I struggled a lot before Steven helped us out by showing us pseudocode.
+Another major difficulty was that the tests for one component often require another component to be implemented in order
+to run.
