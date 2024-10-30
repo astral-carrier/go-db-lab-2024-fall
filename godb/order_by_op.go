@@ -1,14 +1,15 @@
 package godb
 
-import (
-	"fmt"
-)
+import "fmt"
+
+//<silentstrip lab2>
+
+//</silentstrip>
 
 type OrderBy struct {
 	orderBy []Expr // OrderBy should include these two fields (used by parser)
 	child   Operator
-	// TODO: some code goes here
-	// add additional fields here
+	//add additional fields here
 }
 
 // Construct an order by operator. Saves the list of field, child, and ascending
@@ -30,11 +31,6 @@ func (o *OrderBy) Descriptor() *TupleDesc {
 	// TODO: some code goes here
 	return nil
 }
-
-// TODO: some code goes here
-// HINT: You need to use the Sort function for the implement of Iterator
-// Using this you will need to implement three methods: Len, Swap, and Less that
-// the sort algorithm will invoke to produce a sorted list.
 
 // Return a function that iterates through the results of the child iterator in
 // ascending/descending order, as specified in the constructor.  This sort is

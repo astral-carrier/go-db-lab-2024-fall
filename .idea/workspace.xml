@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="ALL" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="5833fa3c-cd28-47b9-93f5-d65c6368acbf" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/godb/agg_op_test.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/godb/delete_op.go" beforeDir="false" afterPath="$PROJECT_DIR$/godb/delete_op.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/godb/filter_op.go" beforeDir="false" afterPath="$PROJECT_DIR$/godb/filter_op.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/godb/insert_op.go" beforeDir="false" afterPath="$PROJECT_DIR$/godb/insert_op.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/godb/insert_op_test.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/godb/join_op.go" beforeDir="false" afterPath="$PROJECT_DIR$/godb/join_op.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/godb/join_op_test.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/godb/limit_op.go" beforeDir="false" afterPath="$PROJECT_DIR$/godb/limit_op.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/godb/limit_op_test.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/godb/mem_file.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/godb/order_by_op.go" beforeDir="false" afterPath="$PROJECT_DIR$/godb/order_by_op.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/godb/order_by_test.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/godb/project_op.go" beforeDir="false" afterPath="$PROJECT_DIR$/godb/project_op.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/godb/project_op_test.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/godb/savedresults/q1-easy-result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/godb/savedresults/q10-easy-result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/godb/savedresults/q11-easy-result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/godb/savedresults/q12-easy-result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/godb/savedresults/q2-easy-result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/godb/savedresults/q3-easy-result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/godb/savedresults/q4-easy-result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/godb/savedresults/q5-easy-result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/godb/savedresults/q6-easy-result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/godb/savedresults/q7-easy-result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/godb/savedresults/q8-easy-result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/godb/savedresults/q9-easy-result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/godb/simple_query_test.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/godb/t.dat" beforeDir="false" afterPath="$PROJECT_DIR$/godb/t.dat" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/godb/t2.dat" beforeDir="false" afterPath="$PROJECT_DIR$/godb/t2.dat" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/godb/test.dat" beforeDir="false" afterPath="$PROJECT_DIR$/godb/test.dat" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/godb/testdb.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/.vscode/launch.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/go.mod" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/go.sum" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/godb/agg_op.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/godb/agg_state.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/godb/buffer_pool.go" beforeDir="false" afterPath="$PROJECT_DIR$/godb/buffer_pool.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/godb/buffer_pool_extra.go" beforeDir="false" afterPath="$PROJECT_DIR$/godb/buffer_pool_extra.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/godb/buffer_pool_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/godb/buffer_pool_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/godb/catalog.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/godb/catalog.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/godb/delete_op.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/godb/delete_op_test.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/godb/easy_parser_test.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/godb/exprs.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/godb/filter_op.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/godb/filter_op_test.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/godb/go.mod" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/godb/go.sum" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/godb/godberrorcode_string.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/godb/heap_file.go" beforeDir="false" afterPath="$PROJECT_DIR$/godb/heap_file.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/godb/heap_file_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/godb/heap_file_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/godb/heap_page.go" beforeDir="false" afterPath="$PROJECT_DIR$/godb/heap_page.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/godb/heap_page_extra.go" beforeDir="false" afterPath="$PROJECT_DIR$/godb/heap_page_extra.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/godb/heap_page_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/godb/heap_page_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/godb/insert_op.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/godb/int_histogram.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/godb/join_op.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/godb/join_optimizer.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/godb/lab1_query.go" beforeDir="false" afterPath="$PROJECT_DIR$/godb/lab1_query.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/godb/lab1_query_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/godb/lab1_query_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/godb/lab1_test.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/godb/limit_op.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/godb/log_file.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/godb/myfile.dat" beforeDir="false" afterPath="$PROJECT_DIR$/godb/myfile.dat" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/godb/order_by_op.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/godb/parser.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/godb/parser_test.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/godb/project_op.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/godb/string_histogram.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/godb/t.dat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/godb/t2.dat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/godb/table_stats.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/godb/test.dat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/godb/test.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/godb/test2.dat" beforeDir="false" afterPath="$PROJECT_DIR$/godb/test2.dat" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/godb/test_heap_file.csv" beforeDir="false" afterPath="$PROJECT_DIR$/godb/test_heap_file.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/godb/transaction.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/godb/tuple.go" beforeDir="false" afterPath="$PROJECT_DIR$/godb/tuple.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/godb/tuple_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/godb/tuple_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/godb/types.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/godb/value_op.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/lab1.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/main.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/submission.zip" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lab1_solution/~$File_Changed.xlsx" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="GOROOT" url="file://$PROJECT_DIR$/../../../../../Program Files/Go" />
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "customColor": "",
+  "associatedIndex": 5
+}]]></component>
+  <component name="ProjectId" id="2o8MGRyxYpCcKUUNeDT3M5pbM84" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Go Test.go test github.com/srmadden/godb.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.go.formatter.settings.were.checked": "true",
+    "RunOnceActivity.go.migrated.go.modules.settings": "true",
+    "RunOnceActivity.go.modules.go.list.on.any.changes.was.set": "true",
+    "git-widget-placeholder": "main",
+    "go.import.settings.migrated": "true",
+    "go.sdk.automatically.set": "true",
+    "last_opened_file_path": "C:/Users/pandi",
+    "node.js.detected.package.eslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\pandi\Documents\GitHub\go-db-lab-2024-fall\godb" />
+      <recent name="C:\Users\pandi\Documents\GitHub\go-db-lab-2024-fall" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Go Test.tuple_test.go">
+    <configuration name="go test github.com/srmadden/godb" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="go-db-lab-2024-fall" />
+      <working_directory value="$PROJECT_DIR$/godb" />
+      <kind value="PACKAGE" />
+      <package value="github.com/srmadden/godb" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <method v="2" />
+    </configuration>
+    <configuration name="tuple_test.go" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="go-db-lab-2024-fall" />
+      <working_directory value="$PROJECT_DIR$/godb" />
+      <kind value="FILE" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$/godb/tuple_test.go" />
+      <framework value="gotest" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Go Test.tuple_test.go" />
+        <item itemvalue="Go Test.go test github.com/srmadden/godb" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-gosdk-5df93f7ad4aa-df9ad98b711f-org.jetbrains.plugins.go.sharedIndexes.bundled-GO-242.22855.85" />
+        <option value="bundled-js-predefined-d6986cc7102b-5c90d61e3bab-JavaScript-GO-242.22855.85" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="VgoProject">
+    <settings-migrated>true</settings-migrated>
+  </component>
+</project>

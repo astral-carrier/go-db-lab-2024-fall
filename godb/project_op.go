@@ -7,7 +7,7 @@ type Project struct {
 	outputNames  []string
 	child        Operator
 	//add additional fields here
-	// TODO: some code goes here
+
 }
 
 // Construct a projection operator. It saves the list of selected field, child,
@@ -17,7 +17,7 @@ type Project struct {
 // distinct is for noting whether the projection reports only distinct results,
 // and child is the child operator.
 func NewProjectOp(selectFields []Expr, outputNames []string, distinct bool, child Operator) (Operator, error) {
-	// TODO: some code goes here
+
 	return nil, nil
 }
 
@@ -27,7 +27,7 @@ func NewProjectOp(selectFields []Expr, outputNames []string, distinct bool, chil
 //
 // HINT: you can use expr.GetExprType() to get the field type
 func (p *Project) Descriptor() *TupleDesc {
-	// TODO: some code goes here
+
 	return nil
 
 }
@@ -39,6 +39,5 @@ func (p *Project) Descriptor() *TupleDesc {
 // distinct tuples seen so far. Note that support for the distinct keyword is
 // optional as specified in the lab 2 assignment.
 func (p *Project) Iterator(tid TransactionID) (func() (*Tuple, error), error) {
- // TODO: some code goes here
 	return nil, fmt.Errorf("project_op.Iterator not implemented")
 }

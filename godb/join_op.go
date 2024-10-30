@@ -1,8 +1,6 @@
 package godb
 
-import (
-	"fmt"
-)
+import "fmt"
 
 type EqualityJoin struct {
 	// Expressions that when applied to tuples from the left or right operators,
@@ -28,7 +26,6 @@ func NewJoin(left Operator, leftField Expr, right Operator, rightField Expr, max
 //
 // HINT: use [TupleDesc.merge].
 func (hj *EqualityJoin) Descriptor() *TupleDesc {
-	// TODO: some code goes here
 	return nil
 }
 
@@ -50,6 +47,5 @@ func (hj *EqualityJoin) Descriptor() *TupleDesc {
 // out. To pass this test, you will need to use something other than a nested
 // loops join.
 func (joinOp *EqualityJoin) Iterator(tid TransactionID) (func() (*Tuple, error), error) {
-	// TODO: some code goes here
 	return nil, fmt.Errorf("join_op.Iterator not implemented")
 }
