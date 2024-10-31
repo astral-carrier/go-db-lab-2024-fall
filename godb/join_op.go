@@ -1,7 +1,5 @@
 package godb
 
-import "fmt"
-
 type EqualityJoin struct {
 	// Expressions that when applied to tuples from the left or right operators,
 	// respectively, return the value of the left or right side of the join
@@ -26,7 +24,15 @@ func NewJoin(left Operator, leftField Expr, right Operator, rightField Expr, max
 //
 // HINT: use [TupleDesc.merge].
 func (hj *EqualityJoin) Descriptor() *TupleDesc {
-	return nil
+	if hj.left == nil && hj.right == nil {
+		return nil
+	} else if hj.left == nil {
+		return (*hj.right).Descriptor()
+	} else if hj.right == nil {
+		return (*hj.left).Descriptor()
+	} else {
+		return (*hj.left).Descriptor().merge((*hj.right).Descriptor())
+	}
 }
 
 // Join operator implementation. This function should iterate over the results
@@ -47,5 +53,92 @@ func (hj *EqualityJoin) Descriptor() *TupleDesc {
 // out. To pass this test, you will need to use something other than a nested
 // loops join.
 func (joinOp *EqualityJoin) Iterator(tid TransactionID) (func() (*Tuple, error), error) {
-	return nil, fmt.Errorf("join_op.Iterator not implemented")
+	if joinOp.left == nil {
+		return nil, GoDBError{MalformedDataError, "left pointer unexpectedly nil"}
+	}
+
+	leftIter, leftIterError := (*joinOp.left).Iterator(tid)
+
+	if leftIterError != nil {
+		return nil, leftIterError
+	}
+	if leftIter == nil {
+		return nil, GoDBError{MalformedDataError, "left iter unexpectedly nil"}
+	}
+
+	if joinOp.right == nil {
+		return nil, GoDBError{MalformedDataError, "right pointer unexpectedly nil"}
+	}
+
+	rightIter, rightIterError := (*joinOp.right).Iterator(tid)
+
+	if rightIterError != nil {
+		return nil, rightIterError
+	}
+	if rightIter == nil {
+		return nil, GoDBError{MalformedDataError, "right iter unexpectedly nil"}
+	}
+
+	leftTuple, leftTupleError := leftIter()
+
+	if leftTupleError != nil {
+		return nil, leftTupleError
+	}
+
+	return func() (*Tuple, error) {
+		for leftTuple != nil {
+			// println("outer run")
+
+			for rightTuple, rightTupleError := rightIter(); rightTuple != nil || rightTupleError != nil; rightTuple, rightTupleError = rightIter() {
+				// println("inner run")
+
+				if rightTupleError != nil {
+					return nil, rightTupleError
+				}
+				if rightTuple == nil {
+					// need to reset inner iterator
+					// println("right iter exhausted")
+
+					break
+				}
+
+				leftValue, leftEvalError := joinOp.leftField.EvalExpr(leftTuple)
+
+				if leftEvalError != nil {
+					return nil, leftEvalError
+				}
+
+				rightValue, rightEvalError := joinOp.rightField.EvalExpr(rightTuple)
+
+				if rightEvalError != nil {
+					return nil, rightEvalError
+				}
+
+				// println(leftValue, rightValue)
+
+				if leftValue == rightValue {
+					return joinTuples(leftTuple, rightTuple), nil
+				}
+			}
+
+			// advance outer iterator
+			leftTuple, leftTupleError = leftIter()
+
+			if leftTupleError != nil {
+				return nil, leftTupleError
+			}
+
+			// reset inner iterator
+			rightIter, rightIterError = (*joinOp.right).Iterator(tid)
+
+			if rightIterError != nil {
+				return nil, rightIterError
+			}
+			if rightIter == nil {
+				return nil, GoDBError{MalformedDataError, "right iter unexpectedly nil"}
+			}
+		}
+
+		return nil, nil
+	}, nil
 }

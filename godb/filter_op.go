@@ -1,7 +1,5 @@
 package godb
 
-import "fmt"
-
 type Filter struct {
 	op    BoolOp
 	left  Expr
@@ -16,7 +14,7 @@ func NewFilter(constExpr Expr, op BoolOp, field Expr, child Operator) (*Filter, 
 
 // Return a TupleDescriptor for this filter op.
 func (f *Filter) Descriptor() *TupleDesc {
-	return nil
+	return &TupleDesc{[]FieldType{f.left.GetExprType()}}
 }
 
 // Filter operator implementation. This function should iterate over the results
@@ -24,5 +22,41 @@ func (f *Filter) Descriptor() *TupleDesc {
 //
 // HINT: you can use [types.evalPred] to compare two values.
 func (f *Filter) Iterator(tid TransactionID) (func() (*Tuple, error), error) {
-	return nil, fmt.Errorf("filter_op.Iterator not implemented")
+	childIter, childIterError := f.child.Iterator(tid)
+
+	if childIterError != nil {
+		return nil, childIterError
+	}
+	if childIter == nil {
+		return nil, GoDBError{MalformedDataError, "child iter unexpectedly nil"}
+	}
+
+	return func() (*Tuple, error) {
+		for t, err := childIter(); t != nil || err != nil; t, err = childIter() {
+			if err != nil {
+				return nil, err
+			}
+			if t == nil {
+				return nil, nil
+			}
+
+			leftValue, leftEvalError := f.left.EvalExpr(t)
+
+			if leftEvalError != nil {
+				return nil, leftEvalError
+			}
+
+			rightValue, rightEvalError := f.right.EvalExpr(nil)
+
+			if rightEvalError != nil {
+				return nil, rightEvalError
+			}
+
+			if leftValue.EvalPred(rightValue, f.op) {
+				return t, nil
+			}
+		}
+
+		return nil, nil
+	}, nil
 }
