@@ -1,11 +1,10 @@
 package godb
 
-import "fmt"
-
 type Project struct {
 	selectFields []Expr // required fields for parser
 	outputNames  []string
 	child        Operator
+	distinct     bool
 	//add additional fields here
 
 }
@@ -17,8 +16,7 @@ type Project struct {
 // distinct is for noting whether the projection reports only distinct results,
 // and child is the child operator.
 func NewProjectOp(selectFields []Expr, outputNames []string, distinct bool, child Operator) (Operator, error) {
-
-	return nil, nil
+	return &Project{selectFields, outputNames, child, distinct}, nil
 }
 
 // Return a TupleDescriptor for this projection. The returned descriptor should
@@ -27,9 +25,17 @@ func NewProjectOp(selectFields []Expr, outputNames []string, distinct bool, chil
 //
 // HINT: you can use expr.GetExprType() to get the field type
 func (p *Project) Descriptor() *TupleDesc {
+	fieldDescs := make([]FieldType, 0)
 
-	return nil
+	for index, field := range p.selectFields {
+		newFieldType := field.GetExprType()
 
+		newFieldType.Fname = p.outputNames[index]
+
+		fieldDescs = append(fieldDescs, newFieldType)
+	}
+
+	return &TupleDesc{fieldDescs}
 }
 
 // Project operator implementation. This function should iterate over the
@@ -39,5 +45,39 @@ func (p *Project) Descriptor() *TupleDesc {
 // distinct tuples seen so far. Note that support for the distinct keyword is
 // optional as specified in the lab 2 assignment.
 func (p *Project) Iterator(tid TransactionID) (func() (*Tuple, error), error) {
-	return nil, fmt.Errorf("project_op.Iterator not implemented")
+	childIter, childIterError := p.child.Iterator(tid)
+
+	if childIterError != nil {
+		return nil, childIterError
+	}
+	if childIter == nil {
+		return nil, GoDBError{MalformedDataError, "child iter unexpectedly nil"}
+	}
+
+	projectFields := make([]FieldType, 0)
+
+	for _, field := range p.selectFields {
+		projectFields = append(projectFields, field.GetExprType())
+	}
+
+	return func() (*Tuple, error) {
+		t, err := childIter()
+
+		if err != nil {
+			return nil, err
+		}
+		if t == nil {
+			return nil, nil
+		}
+
+		projection, projectError := t.project(projectFields)
+
+		if projectError != nil {
+			return nil, projectError
+		}
+
+		projection.Desc = *p.Descriptor()
+
+		return projection, nil
+	}, nil
 }
