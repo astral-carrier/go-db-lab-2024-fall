@@ -70,13 +70,19 @@ func (p *Project) Iterator(tid TransactionID) (func() (*Tuple, error), error) {
 			return nil, nil
 		}
 
-		projection, projectError := t.project(projectFields)
+		fieldVals := make([]DBValue, 0)
 
-		if projectError != nil {
-			return nil, projectError
+		for _, field := range p.selectFields {
+			evalResult, evalError := field.EvalExpr(t)
+
+			if evalError != nil {
+				return nil, evalError
+			}
+
+			fieldVals = append(fieldVals, evalResult)
 		}
 
-		projection.Desc = *p.Descriptor()
+		projection := &Tuple{*p.Descriptor(), fieldVals, nil}
 
 		return projection, nil
 	}, nil
