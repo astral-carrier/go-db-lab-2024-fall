@@ -1,1 +1,11 @@
-yes
+I went with a nested loop join because it was the simplest to implement and I did not do the extra credit.
+
+I did not add additional fields to the structs beyond those required to store constructor parameters. The exception to
+this is for ORDER BY. This is because the OrderBy struct implements the interface required for sorting (essentially,
+I call sort.Sort on the OrderBy struct itself)
+
+I did not make any design changes to the API.
+
+I did not implement DISTINCT or varying join algorithms for efficiency.
+
+I spent about 5 hours on this lab.
