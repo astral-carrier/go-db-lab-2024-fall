@@ -294,7 +294,7 @@ you a candy bar!
 <a name="grading"></a>
 ### 3.4 Grading
 
-50% of your grade will be based on whether or not your code passes the system test suite we will run over it. These tests will be a superset of the tests we have provided. Before handing in your code, you should make sure it produces no errors (passes all of the tests) when you run `go test` in the `godb` directory.
+All of your grade( in total 75) will be based on whether or not your code passes the system test suite we will run over it, but we will examine your code to make sure that you don't hack to pass the test cases. These tests will be a superset of the tests we have provided. Before handing in your code, you should make sure it produces no errors (passes all of the tests) when you run `go test` in the `godb` directory.
 
 **New:**
 
@@ -302,12 +302,12 @@ you a candy bar!
 
 -   Given that this lab deals with concurrency, we will rerun the autograder after the due date to discourage trying buggy code until lucky. It is your responsibility to ensure that your code  **reliably**  passes the tests.
 
--   This lab has a higher percentage of manual grading at 50% compared to previous labs. Specifically, we will be very unhappy if your concurrency handling is bogus (e.g., inserting  `time.Sleep(time.Second)` until a race disappears).
+-   We will be very unhappy if your concurrency handling is bogus (e.g., inserting  `time.Sleep(time.Second)` until a race disappears).
 
 
 
 **Important:** Before testing, Gradescope will replace the go test files with our version of these files. This means you should make sure that your code passes the unmodified tests.
 
-You should get immediate feedback and error outputs for failed visible tests (if any) from Gradescope after submission. There may exist several hidden tests (a small percentage) that will not be visible until after the deadline. The score given will be your grade for the auto-graded portion of the assignment. An additional 50% of your grade will be based on the quality of your writeup and our subjective evaluation of your code. This part will also be published on Gradescope after we finish grading your assignment.
+You should get immediate feedback and error outputs for failed visible tests (if any) from Gradescope after submission. There may exist several hidden tests (a small percentage) that will not be visible until after the deadline. 
 
 We had a lot of fun designing this assignment, and we hope you enjoy hacking on it!
