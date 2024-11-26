@@ -130,9 +130,9 @@ func main() {
 			case 'o':
 				godb.EnableJoinOptimization = !godb.EnableJoinOptimization
 				if godb.EnableJoinOptimization {
-					fmt.Println("\033[32;1mOptimization enabled\033[0m\n\n")
+					fmt.Println("\033[32;1mOptimization enabled\033[0m")
 				} else {
-					fmt.Println("\033[32;1mOptimization disabled\033[0m\n\n")
+					fmt.Println("\033[32;1mOptimization disabled\033[0m")
 				}
 			case 'z':
 				c.ComputeTableStats()

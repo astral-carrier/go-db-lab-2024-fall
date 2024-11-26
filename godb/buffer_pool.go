@@ -9,7 +9,7 @@ import (
 	"fmt"
 )
 
-// Permissions used to when reading / locking pages
+// RWPerm Permissions used to when reading / locking pages
 type RWPerm int
 
 const (
@@ -28,17 +28,20 @@ type BufferPool struct {
 	// TODO: some code goes here
 }
 
-// Create a new BufferPool with the specified number of pages
+// NewBufferPool Create a new BufferPool with the specified number of pages
 func NewBufferPool(numPages int) (*BufferPool, error) {
-	return &BufferPool{}, fmt.Errorf("NewBufferPool not implemented") //replace it
-	// TODO: some code goes here
+	return &BufferPool{make(map[any]Page), numPages, nil}, nil
 }
 
-// Testing method -- iterate through all pages in the buffer pool and flush them
+// FlushAllPages Testing method -- iterate through all pages in the buffer pool and flush them
 // using [DBFile.flushPage]. Does not need to be thread/transaction safe
 func (bp *BufferPool) FlushAllPages() {
 	for _, page := range bp.pages {
-		page.getFile().flushPage(page)
+		err := page.getFile().flushPage(page)
+
+		if err != nil {
+			return
+		}
 	}
 }
 
@@ -51,7 +54,7 @@ func (bp *BufferPool) FlushAllPages() {
 // Caller must hold the bufferpool lock.
 // TODO: some code goes here : func (bp *BufferPool) tidIsRunning(tid TransactionID) bool
 
-// Abort the transaction, releasing locks. Because GoDB is FORCE/NO STEAL, none
+// AbortTransaction Abort the transaction, releasing locks. Because GoDB is FORCE/NO STEAL, none
 // of the pages tid has dirtied will be on disk so it is sufficient to just
 // release locks to abort. You do not need to implement this for lab 1.
 // TODO: some code goes here : func (bp *BufferPool) AbortTransaction(tid TransactionID)
@@ -59,7 +62,7 @@ func (bp *BufferPool) AbortTransaction(tid TransactionID) {
 
 }
 
-// Commit the transaction, releasing locks. Because GoDB is FORCE/NO STEAL, none
+// CommitTransaction Commit the transaction, releasing locks. Because GoDB is FORCE/NO STEAL, none
 // of the pages tid has dirtied will be on disk, so prior to releasing locks you
 // should iterate through pages and write them to disk.  In GoDB lab3 we assume
 // that the system will not crash while doing this, allowing us to avoid using a
@@ -69,7 +72,7 @@ func (bp *BufferPool) CommitTransaction(tid TransactionID) {
 
 }
 
-// Begin a new transaction. You do not need to implement this for lab 1.
+// BeginTransaction Begin a new transaction. You do not need to implement this for lab 1.
 //
 // Returns an error if the transaction is already running.
 // TODO: some code goes here: func (bp *BufferPool) BeginTransaction(tid TransactionID) error
@@ -101,7 +104,7 @@ func (bp *BufferPool) evictPage() error {
 // Loads the specified page from the specified DBFile, but does not lock it.
 // TODO: some code goes here : func (bp *BufferPool) loadPage(file DBFile, pageNo int) (Page, error)
 
-// Retrieve the specified page from the specified DBFile (e.g., a HeapFile), on
+// GetPage Retrieve the specified page from the specified DBFile (e.g., a HeapFile), on
 // behalf of the specified transaction. If a page is not cached in the buffer pool,
 // you can read it from disk uing [DBFile.readPage]. If the buffer pool is full (i.e.,
 // already stores numPages pages), a page should be evicted.  Should not evict
