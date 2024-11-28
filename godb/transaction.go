@@ -2,6 +2,8 @@ package godb
 
 import "sync"
 
+const NullTransactionID = -1
+
 type TransactionID int
 
 var nextTid = 0

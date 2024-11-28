@@ -6,7 +6,7 @@ package godb
 //level locking (you will not need to worry about this until lab3).
 
 import (
-	"fmt"
+	"sync"
 )
 
 // RWPerm Permissions used to when reading / locking pages
@@ -17,10 +17,79 @@ const (
 	WritePerm RWPerm = iota
 )
 
+type PageStatus struct {
+	sharedLockHolders     map[TransactionID]bool
+	sharedLockHolderCount int
+	exclusiveLockHolder   TransactionID
+}
+
+func newPageStatus() *PageStatus {
+	return &PageStatus{make(map[TransactionID]bool), 0, NullTransactionID}
+}
+
+func (ps *PageStatus) requestSharedLock(tid TransactionID) bool {
+	// deny lock if anyone holds exclusive lock except me
+	if ps.exclusiveLockHolder != NullTransactionID && ps.exclusiveLockHolder != tid {
+		return false
+	}
+
+	// if entry doesn't exist, false is returned by default
+	hasSharedLock := ps.sharedLockHolders[tid]
+
+	if !hasSharedLock {
+		ps.sharedLockHolders[tid] = true
+		ps.sharedLockHolderCount++
+	}
+
+	return true
+}
+
+func (ps *PageStatus) requestExclusiveLock(tid TransactionID) bool {
+	// deny lock if anyone holds exclusive lock except me
+	if ps.exclusiveLockHolder != NullTransactionID && ps.exclusiveLockHolder != tid {
+		return false
+	}
+
+	// grant if either nobody holds the shared lock or only i hold the shared lock
+	if ps.sharedLockHolderCount == 0 {
+		ps.exclusiveLockHolder = tid
+
+		return true
+	} else if ps.sharedLockHolderCount == 1 && ps.sharedLockHolders[tid] {
+		ps.exclusiveLockHolder = tid
+
+		// TODO: maybe release the shared lock?
+
+		return true
+	}
+
+	return false
+}
+
+func (ps *PageStatus) releaseSharedLock(tid TransactionID) {
+	// no restrictions on releasing shared lock; you can always do it
+	// if entry doesn't exist, false is returned by default
+	hasSharedLock := ps.sharedLockHolders[tid]
+
+	if !hasSharedLock {
+		ps.sharedLockHolders[tid] = false
+		ps.sharedLockHolderCount--
+	}
+}
+
+func (ps *PageStatus) releaseExclusiveLock(tid TransactionID) {
+	// no restrictions on releasing exclusive lock; you can always do it
+	if ps.exclusiveLockHolder == tid {
+		ps.exclusiveLockHolder = NullTransactionID
+	}
+}
+
 type BufferPool struct {
-	pages    map[any]Page
-	maxPages int
-	logFile  *LogFile
+	pages        map[any]Page
+	maxPages     int
+	logFile      *LogFile
+	poolMutex    *sync.Mutex
+	pageStatuses map[Page]*PageStatus
 
 	// the transactions that are currently running. This is a set, so the value
 	// is not important
@@ -30,7 +99,8 @@ type BufferPool struct {
 
 // NewBufferPool Create a new BufferPool with the specified number of pages
 func NewBufferPool(numPages int) (*BufferPool, error) {
-	return &BufferPool{make(map[any]Page), numPages, nil}, nil
+	return &BufferPool{make(map[any]Page), numPages, nil, new(sync.Mutex),
+		make(map[Page]*PageStatus)}, nil
 }
 
 // FlushAllPages Testing method -- iterate through all pages in the buffer pool and flush them
@@ -104,7 +174,7 @@ func (bp *BufferPool) evictPage() error {
 // Loads the specified page from the specified DBFile, but does not lock it.
 // TODO: some code goes here : func (bp *BufferPool) loadPage(file DBFile, pageNo int) (Page, error)
 
-// GetPage Retrieve the specified page from the specified DBFile (e.g., a HeapFile), on
+// Retrieve the specified page from the specified DBFile (e.g., a HeapFile), on
 // behalf of the specified transaction. If a page is not cached in the buffer pool,
 // you can read it from disk uing [DBFile.readPage]. If the buffer pool is full (i.e.,
 // already stores numPages pages), a page should be evicted.  Should not evict
@@ -116,7 +186,52 @@ func (bp *BufferPool) evictPage() error {
 // implement locking or deadlock detection. You will likely want to store a list
 // of pages in the BufferPool in a map keyed by the [DBFile.pageKey].
 func (bp *BufferPool) GetPage(file DBFile, pageNo int, tid TransactionID, perm RWPerm) (Page, error) {
-
-	return nil, fmt.Errorf("GetPage not implemented") //replace it
 	// TODO: some code goes here
+	// get the pool mutex
+	bp.poolMutex.Lock()
+
+	hashCode := file.pageKey(pageNo)
+	pg, ok := bp.pages[hashCode]
+	if !ok {
+		err := bp.evictPage()
+		if err != nil {
+			return nil, err
+		}
+		pg, err = file.readPage(pageNo)
+		if err != nil {
+			return nil, err
+		}
+		bp.pages[hashCode] = pg
+	}
+
+	status, statusExists := bp.pageStatuses[pg]
+
+	// create new page status for this page if one doesn't already exist
+	if !statusExists {
+		status = newPageStatus()
+
+		bp.pageStatuses[pg] = status
+	}
+
+	var acquireMethod func(tid TransactionID) bool
+
+	if perm == ReadPerm {
+		// shared lock for read perm
+		acquireMethod = status.requestSharedLock
+	} else {
+		// exclusive lock for write perm
+		acquireMethod = status.requestExclusiveLock
+	}
+
+	// repeatedly try to request the shared or exclusive lock
+	// release pool mutex after each failure and reacquire it before each attempt
+	for !acquireMethod(tid) {
+		bp.poolMutex.Unlock()
+		bp.poolMutex.Lock()
+	}
+
+	// release pool mutex a final time
+	bp.poolMutex.Unlock()
+
+	return pg, nil
 }
