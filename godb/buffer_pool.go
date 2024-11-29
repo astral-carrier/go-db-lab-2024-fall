@@ -18,13 +18,14 @@ const (
 )
 
 type PageStatus struct {
-	sharedLockHolders     map[TransactionID]bool
-	sharedLockHolderCount int
-	exclusiveLockHolder   TransactionID
+	// map that is used as a set; all present values are true
+	// so you can test for membership in the set by testing membership in the map or by testing value in the map
+	sharedLockHolders   map[TransactionID]bool
+	exclusiveLockHolder TransactionID
 }
 
 func newPageStatus() *PageStatus {
-	return &PageStatus{make(map[TransactionID]bool), 0, NullTransactionID}
+	return &PageStatus{make(map[TransactionID]bool), NullTransactionID}
 }
 
 func (ps *PageStatus) requestSharedLock(tid TransactionID) bool {
@@ -33,12 +34,11 @@ func (ps *PageStatus) requestSharedLock(tid TransactionID) bool {
 		return false
 	}
 
-	// if entry doesn't exist, false is returned by default
-	hasSharedLock := ps.sharedLockHolders[tid]
+	// testing membership, altho testing value would work too
+	_, hasSharedLock := ps.sharedLockHolders[tid]
 
 	if !hasSharedLock {
 		ps.sharedLockHolders[tid] = true
-		ps.sharedLockHolderCount++
 	}
 
 	return true
@@ -50,15 +50,19 @@ func (ps *PageStatus) requestExclusiveLock(tid TransactionID) bool {
 		return false
 	}
 
+	// i'm p sure this gets the number of valid entries in map
+	sharedLockHolderCount := len(ps.sharedLockHolders)
+
 	// grant if either nobody holds the shared lock or only i hold the shared lock
-	if ps.sharedLockHolderCount == 0 {
+	if sharedLockHolderCount == 0 {
 		ps.exclusiveLockHolder = tid
 
 		return true
-	} else if ps.sharedLockHolderCount == 1 && ps.sharedLockHolders[tid] {
+	} else if sharedLockHolderCount == 1 && ps.sharedLockHolders[tid] {
+		// tested by value above cuz it was just more convenient
 		ps.exclusiveLockHolder = tid
 
-		// TODO: maybe release the shared lock?
+		// TODO: maybe release the shared lock on upgrade?
 
 		return true
 	}
@@ -68,12 +72,12 @@ func (ps *PageStatus) requestExclusiveLock(tid TransactionID) bool {
 
 func (ps *PageStatus) releaseSharedLock(tid TransactionID) {
 	// no restrictions on releasing shared lock; you can always do it
-	// if entry doesn't exist, false is returned by default
-	hasSharedLock := ps.sharedLockHolders[tid]
+	// testing by membership altho testing for value would've also worked
+	_, hasSharedLock := ps.sharedLockHolders[tid]
 
 	if !hasSharedLock {
-		ps.sharedLockHolders[tid] = false
-		ps.sharedLockHolderCount--
+		// delete from the set by deleting from the map
+		delete(ps.sharedLockHolders, tid)
 	}
 }
 
