@@ -8,7 +8,6 @@ package godb
 import (
 	"fmt"
 	"sync"
-	"time"
 )
 
 // RWPerm Permissions used to when reading / locking pages
@@ -31,11 +30,11 @@ func newPageStatus() *PageStatus {
 }
 
 func (ps *PageStatus) requestSharedLock(tid TransactionID) bool {
-	println("shared lock being requested by", tid)
+	// println("shared lock being requested by", tid)
 
 	// deny lock if anyone holds exclusive lock except me
 	if ps.exclusiveLockHolder != NullTransactionID && ps.exclusiveLockHolder != tid {
-		println("shared lock denied due to exclusive lock being occupied by", ps.exclusiveLockHolder)
+		// println("shared lock denied due to exclusive lock being occupied by", ps.exclusiveLockHolder)
 
 		return false
 	}
@@ -51,11 +50,11 @@ func (ps *PageStatus) requestSharedLock(tid TransactionID) bool {
 }
 
 func (ps *PageStatus) requestExclusiveLock(tid TransactionID) bool {
-	println("exclusive lock being requested by", tid)
+	// println("exclusive lock being requested by", tid)
 
 	// deny lock if anyone holds exclusive lock except me
 	if ps.exclusiveLockHolder != NullTransactionID && ps.exclusiveLockHolder != tid {
-		println("exclusive lock denied due to exclusive lock being occupied by", ps.exclusiveLockHolder)
+		// println("exclusive lock denied due to exclusive lock being occupied by", ps.exclusiveLockHolder)
 
 		return false
 	}
@@ -77,7 +76,7 @@ func (ps *PageStatus) requestExclusiveLock(tid TransactionID) bool {
 		return true
 	}
 
-	println("exclusive lock denied due to shared lock being occupied by", sharedLockHolderCount, "processes")
+	// println("exclusive lock denied due to shared lock being occupied by", sharedLockHolderCount, "processes")
 
 	return false
 }
@@ -91,8 +90,8 @@ func (ps *PageStatus) releaseSharedLock(tid TransactionID) {
 		// delete from the set by deleting from the map
 		delete(ps.sharedLockHolders, tid)
 
-		println("shared lock released by ", tid)
-		println(len(ps.sharedLockHolders), "shared lock holders")
+		// println("shared lock released by ", tid)
+		// println(len(ps.sharedLockHolders), "shared lock holders")
 	}
 }
 
@@ -101,7 +100,7 @@ func (ps *PageStatus) releaseExclusiveLock(tid TransactionID) {
 	if ps.exclusiveLockHolder == tid {
 		ps.exclusiveLockHolder = NullTransactionID
 
-		println("exclusive lock released by ", tid)
+		// println("exclusive lock released by ", tid)
 	}
 }
 
@@ -161,7 +160,7 @@ func (bp *BufferPool) releaseLocks(tid TransactionID) {
 // release locks to abort. You do not need to implement this for lab 1.
 // TODO: some code goes here : func (bp *BufferPool) AbortTransaction(tid TransactionID)
 func (bp *BufferPool) AbortTransaction(tid TransactionID) error {
-	println("aborting...")
+	// println("aborting...")
 
 	bp.poolMutex.Lock()
 	defer bp.poolMutex.Unlock()
@@ -184,7 +183,7 @@ func (bp *BufferPool) AbortTransaction(tid TransactionID) error {
 
 	delete(bp.activeTransactions, tid)
 
-	println("aborted")
+	// println("aborted")
 
 	return nil
 }
@@ -196,7 +195,7 @@ func (bp *BufferPool) AbortTransaction(tid TransactionID) error {
 // WAL. You do not need to implement this for lab 1.
 // TODO: some code goes here : func (bp *BufferPool) CommitTransaction(tid TransactionID)
 func (bp *BufferPool) CommitTransaction(tid TransactionID) error {
-	println("committing...")
+	// println("committing...")
 
 	bp.poolMutex.Lock()
 	defer bp.poolMutex.Unlock()
@@ -223,7 +222,7 @@ func (bp *BufferPool) CommitTransaction(tid TransactionID) error {
 
 	delete(bp.activeTransactions, tid)
 
-	println("committed")
+	// println("committed")
 
 	return nil
 }
@@ -233,7 +232,7 @@ func (bp *BufferPool) CommitTransaction(tid TransactionID) error {
 // Returns an error if the transaction is already running.
 // TODO: some code goes here: func (bp *BufferPool) BeginTransaction(tid TransactionID) error
 func (bp *BufferPool) BeginTransaction(tid TransactionID) error {
-	println("begin transaction...")
+	// println("begin transaction...")
 
 	bp.poolMutex.Lock()
 	defer bp.poolMutex.Unlock()
@@ -245,7 +244,7 @@ func (bp *BufferPool) BeginTransaction(tid TransactionID) error {
 
 	bp.activeTransactions[tid] = true
 
-	println("began")
+	// println("began")
 
 	return nil
 }
@@ -328,7 +327,7 @@ func (bp *BufferPool) GetPage(file DBFile, pageNo int, tid TransactionID, perm R
 	for !acquireMethod(tid) {
 		bp.poolMutex.Unlock()
 
-		time.Sleep(10)
+		// time.Sleep(10)
 
 		bp.poolMutex.Lock()
 	}
