@@ -6,6 +6,7 @@ package godb
 //level locking (you will not need to worry about this until lab3).
 
 import (
+	"fmt"
 	"sync"
 )
 
@@ -89,11 +90,12 @@ func (ps *PageStatus) releaseExclusiveLock(tid TransactionID) {
 }
 
 type BufferPool struct {
-	pages        map[any]Page
-	maxPages     int
-	logFile      *LogFile
-	poolMutex    *sync.Mutex
-	pageStatuses map[Page]*PageStatus
+	pages              map[any]Page
+	maxPages           int
+	logFile            *LogFile
+	poolMutex          *sync.Mutex
+	pageStatuses       map[Page]*PageStatus
+	activeTransactions map[TransactionID]bool
 
 	// the transactions that are currently running. This is a set, so the value
 	// is not important
@@ -104,7 +106,7 @@ type BufferPool struct {
 // NewBufferPool Create a new BufferPool with the specified number of pages
 func NewBufferPool(numPages int) (*BufferPool, error) {
 	return &BufferPool{make(map[any]Page), numPages, nil, new(sync.Mutex),
-		make(map[Page]*PageStatus)}, nil
+		make(map[Page]*PageStatus), make(map[TransactionID]bool)}, nil
 }
 
 // FlushAllPages Testing method -- iterate through all pages in the buffer pool and flush them
@@ -126,14 +128,45 @@ func (bp *BufferPool) FlushAllPages() {
 // Returns true if the transaction is runing.
 //
 // Caller must hold the bufferpool lock.
-// TODO: some code goes here : func (bp *BufferPool) tidIsRunning(tid TransactionID) bool
+func (bp *BufferPool) tidIsRunning(tid TransactionID) bool {
+	return bp.activeTransactions[tid]
+}
+
+func (bp *BufferPool) releaseLocks(tid TransactionID) {
+	for _, status := range bp.pageStatuses {
+		// these methods won't do anything if there is no lock so i can just call them without checking
+		status.releaseSharedLock(tid)
+		status.releaseExclusiveLock(tid)
+	}
+}
 
 // AbortTransaction Abort the transaction, releasing locks. Because GoDB is FORCE/NO STEAL, none
 // of the pages tid has dirtied will be on disk so it is sufficient to just
 // release locks to abort. You do not need to implement this for lab 1.
 // TODO: some code goes here : func (bp *BufferPool) AbortTransaction(tid TransactionID)
-func (bp *BufferPool) AbortTransaction(tid TransactionID) {
+func (bp *BufferPool) AbortTransaction(tid TransactionID) error {
+	bp.poolMutex.Lock()
+	defer bp.poolMutex.Unlock()
 
+	if !bp.tidIsRunning(tid) {
+		return GoDBError{IllegalTransactionError, fmt.Sprintf("Cannot abort transation %d as "+
+			"it is not running", tid)}
+	}
+
+	for pageId, page := range bp.pages {
+		status := bp.pageStatuses[page]
+
+		// delete page if i am writer and page is dirty
+		if status.exclusiveLockHolder == tid && page.isDirty() {
+			delete(bp.pages, pageId)
+		}
+	}
+
+	bp.releaseLocks(tid)
+
+	delete(bp.activeTransactions, tid)
+
+	return nil
 }
 
 // CommitTransaction Commit the transaction, releasing locks. Because GoDB is FORCE/NO STEAL, none
@@ -142,8 +175,31 @@ func (bp *BufferPool) AbortTransaction(tid TransactionID) {
 // that the system will not crash while doing this, allowing us to avoid using a
 // WAL. You do not need to implement this for lab 1.
 // TODO: some code goes here : func (bp *BufferPool) CommitTransaction(tid TransactionID)
-func (bp *BufferPool) CommitTransaction(tid TransactionID) {
+func (bp *BufferPool) CommitTransaction(tid TransactionID) error {
+	bp.poolMutex.Lock()
+	defer bp.poolMutex.Unlock()
 
+	if !bp.tidIsRunning(tid) {
+		return GoDBError{IllegalTransactionError, fmt.Sprintf("Cannot commit transation %d as "+
+			"it is not running", tid)}
+	}
+
+	for page, status := range bp.pageStatuses {
+		// flush page if i am writer and page is dirty
+		if status.exclusiveLockHolder == tid && page.isDirty() {
+			pageFlushError := page.getFile().flushPage(page)
+
+			if pageFlushError != nil {
+				return pageFlushError
+			}
+		}
+	}
+
+	bp.releaseLocks(tid)
+
+	delete(bp.activeTransactions, tid)
+
+	return nil
 }
 
 // BeginTransaction Begin a new transaction. You do not need to implement this for lab 1.
@@ -151,6 +207,16 @@ func (bp *BufferPool) CommitTransaction(tid TransactionID) {
 // Returns an error if the transaction is already running.
 // TODO: some code goes here: func (bp *BufferPool) BeginTransaction(tid TransactionID) error
 func (bp *BufferPool) BeginTransaction(tid TransactionID) error {
+	bp.poolMutex.Lock()
+	defer bp.poolMutex.Unlock()
+
+	if bp.tidIsRunning(tid) {
+		return GoDBError{IllegalTransactionError, fmt.Sprintf("Cannot begin transaction %d as "+
+			"it is already running", tid)}
+	}
+
+	bp.activeTransactions[tid] = true
+
 	return nil
 }
 
@@ -178,7 +244,7 @@ func (bp *BufferPool) evictPage() error {
 // Loads the specified page from the specified DBFile, but does not lock it.
 // TODO: some code goes here : func (bp *BufferPool) loadPage(file DBFile, pageNo int) (Page, error)
 
-// Retrieve the specified page from the specified DBFile (e.g., a HeapFile), on
+// GetPage Retrieve the specified page from the specified DBFile (e.g., a HeapFile), on
 // behalf of the specified transaction. If a page is not cached in the buffer pool,
 // you can read it from disk uing [DBFile.readPage]. If the buffer pool is full (i.e.,
 // already stores numPages pages), a page should be evicted.  Should not evict
