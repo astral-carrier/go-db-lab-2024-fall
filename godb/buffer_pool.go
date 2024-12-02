@@ -23,62 +23,68 @@ type PageStatus struct {
 	// so you can test for membership in the set by testing membership in the map or by testing value in the map
 	sharedLockHolders   map[TransactionID]bool
 	exclusiveLockHolder TransactionID
+	bufferPool          *BufferPool
 }
 
-func newPageStatus() *PageStatus {
-	return &PageStatus{make(map[TransactionID]bool), NullTransactionID}
+func newPageStatus(bufferPool *BufferPool) *PageStatus {
+	return &PageStatus{make(map[TransactionID]bool), NullTransactionID,
+		bufferPool}
 }
 
 func (ps *PageStatus) requestSharedLock(tid TransactionID) bool {
 	// println("shared lock being requested by", tid)
 
-	// deny lock if anyone holds exclusive lock except me
+	// deny lock if anyone holds exclusive lock except me, grant otherwise
 	if ps.exclusiveLockHolder != NullTransactionID && ps.exclusiveLockHolder != tid {
 		// println("shared lock denied due to exclusive lock being occupied by", ps.exclusiveLockHolder)
 
+		ps.bufferPool.addDependence(tid, ps.exclusiveLockHolder)
+
 		return false
+	} else {
+		// testing membership, altho testing value would work too
+		_, hasSharedLock := ps.sharedLockHolders[tid]
+
+		if !hasSharedLock {
+			ps.sharedLockHolders[tid] = true
+		}
+
+		return true
 	}
-
-	// testing membership, altho testing value would work too
-	_, hasSharedLock := ps.sharedLockHolders[tid]
-
-	if !hasSharedLock {
-		ps.sharedLockHolders[tid] = true
-	}
-
-	return true
 }
 
 func (ps *PageStatus) requestExclusiveLock(tid TransactionID) bool {
 	// println("exclusive lock being requested by", tid)
+	grant := true
 
 	// deny lock if anyone holds exclusive lock except me
 	if ps.exclusiveLockHolder != NullTransactionID && ps.exclusiveLockHolder != tid {
 		// println("exclusive lock denied due to exclusive lock being occupied by", ps.exclusiveLockHolder)
 
-		return false
+		ps.bufferPool.addDependence(tid, ps.exclusiveLockHolder)
+
+		grant = false
 	}
 
 	// i'm p sure this gets the number of valid entries in map
 	sharedLockHolderCount := len(ps.sharedLockHolders)
 
 	// grant if either nobody holds the shared lock or only i hold the shared lock
-	if sharedLockHolderCount == 0 {
+	if sharedLockHolderCount > 1 || (sharedLockHolderCount == 1 && !ps.sharedLockHolders[tid]) {
+		for holder := range ps.sharedLockHolders {
+			ps.bufferPool.addDependence(tid, holder)
+		}
+
+		grant = false
+	}
+
+	if grant {
 		ps.exclusiveLockHolder = tid
-
-		return true
-	} else if sharedLockHolderCount == 1 && ps.sharedLockHolders[tid] {
-		// tested by value above cuz it was just more convenient
-		ps.exclusiveLockHolder = tid
-
-		// TODO: maybe release the shared lock on upgrade?
-
-		return true
 	}
 
 	// println("exclusive lock denied due to shared lock being occupied by", sharedLockHolderCount, "processes")
 
-	return false
+	return grant
 }
 
 func (ps *PageStatus) releaseSharedLock(tid TransactionID) {
@@ -104,6 +110,19 @@ func (ps *PageStatus) releaseExclusiveLock(tid TransactionID) {
 	}
 }
 
+func (ps *PageStatus) releaseLocks(tid TransactionID) {
+	ps.releaseSharedLock(tid)
+	ps.releaseExclusiveLock(tid)
+
+	// disconnect all dependencies on me
+	for possibleDepender := range ps.bufferPool.dependencies {
+		ps.bufferPool.removeDependence(possibleDepender, tid)
+	}
+
+	// i no longer depend on anyone
+	delete(ps.bufferPool.dependencies, tid)
+}
+
 type BufferPool struct {
 	pages              map[any]Page
 	maxPages           int
@@ -111,6 +130,7 @@ type BufferPool struct {
 	poolMutex          *sync.Mutex
 	pageStatuses       map[Page]*PageStatus
 	activeTransactions map[TransactionID]bool
+	dependencies       map[TransactionID]map[TransactionID]bool
 
 	// the transactions that are currently running. This is a set, so the value
 	// is not important
@@ -121,7 +141,55 @@ type BufferPool struct {
 // NewBufferPool Create a new BufferPool with the specified number of pages
 func NewBufferPool(numPages int) (*BufferPool, error) {
 	return &BufferPool{make(map[any]Page), numPages, nil, new(sync.Mutex),
-		make(map[Page]*PageStatus), make(map[TransactionID]bool)}, nil
+		make(map[Page]*PageStatus), make(map[TransactionID]bool),
+		make(map[TransactionID]map[TransactionID]bool)}, nil
+}
+
+func (bp *BufferPool) addDependence(depender TransactionID, dependsOn TransactionID) {
+	// make submap if it didn't exist already
+	if bp.dependencies[depender] == nil {
+		bp.dependencies[depender] = make(map[TransactionID]bool)
+	}
+
+	bp.dependencies[depender][dependsOn] = true
+}
+
+func (bp *BufferPool) removeDependence(depender TransactionID, dependsOn TransactionID) {
+	delete(bp.dependencies[depender], dependsOn)
+}
+
+func (bp *BufferPool) checkCycleDfs(tid TransactionID, temporaryVisited map[TransactionID]bool,
+	permanentVisited map[TransactionID]bool) bool {
+	if permanentVisited[tid] {
+		// already visited this and found no cycle
+		return false
+	}
+	if temporaryVisited[tid] {
+		// graph has cycle
+		return true
+	}
+
+	temporaryVisited[tid] = true
+
+	for dependsOn := range bp.dependencies[tid] {
+		hasCycle := bp.checkCycleDfs(dependsOn, temporaryVisited, permanentVisited)
+
+		if hasCycle {
+			return true
+		}
+	}
+
+	permanentVisited[tid] = true
+
+	// no cycle detected (yet)
+	return false
+}
+
+func (bp *BufferPool) checkCycle(tid TransactionID) bool {
+	temporaryVisited := make(map[TransactionID]bool)
+	permanentVisited := make(map[TransactionID]bool)
+
+	return bp.checkCycleDfs(tid, temporaryVisited, permanentVisited)
 }
 
 // FlushAllPages Testing method -- iterate through all pages in the buffer pool and flush them
@@ -273,6 +341,10 @@ func (bp *BufferPool) evictPage() error {
 // Loads the specified page from the specified DBFile, but does not lock it.
 // TODO: some code goes here : func (bp *BufferPool) loadPage(file DBFile, pageNo int) (Page, error)
 
+func (bp *BufferPool) deadlockCancel(tid TransactionID) {
+
+}
+
 // GetPage Retrieve the specified page from the specified DBFile (e.g., a HeapFile), on
 // behalf of the specified transaction. If a page is not cached in the buffer pool,
 // you can read it from disk uing [DBFile.readPage]. If the buffer pool is full (i.e.,
@@ -307,7 +379,7 @@ func (bp *BufferPool) GetPage(file DBFile, pageNo int, tid TransactionID, perm R
 
 	// create new page status for this page if one doesn't already exist
 	if !statusExists {
-		status = newPageStatus()
+		status = newPageStatus(bp)
 
 		bp.pageStatuses[pg] = status
 	}
@@ -325,7 +397,20 @@ func (bp *BufferPool) GetPage(file DBFile, pageNo int, tid TransactionID, perm R
 	// repeatedly try to request the shared or exclusive lock
 	// release pool mutex after each failure and reacquire it before each attempt
 	for !acquireMethod(tid) {
+		cycleExists := bp.checkCycle(tid)
+
 		bp.poolMutex.Unlock()
+
+		if cycleExists {
+			abortError := bp.AbortTransaction(tid)
+
+			if abortError != nil {
+				return nil, abortError
+			}
+
+			return nil, GoDBError{DeadlockError, fmt.Sprintf("Deadlock detected; aborting "+
+				"transaction %d", tid)}
+		}
 
 		// time.Sleep(10)
 
