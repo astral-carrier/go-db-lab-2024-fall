@@ -22,7 +22,7 @@ type HeapFile struct {
 	// HeapFile should include the fields below;  you may want to add
 	// additional fields
 	bufPool *BufferPool
-	sync.Mutex
+	mutex   sync.Mutex
 }
 
 type heapFileRid struct {
@@ -197,6 +197,9 @@ func (f *HeapFile) readPage(pageNo int) (Page, error) {
 // The page the tuple is inserted into should be marked as dirty.
 // TODO: some code goes here: Lock and Unlock
 func (f *HeapFile) insertTuple(t *Tuple, tid TransactionID) error {
+	f.mutex.Lock()
+
+	defer f.mutex.Unlock()
 
 	var start int
 
@@ -270,6 +273,9 @@ func (f *HeapFile) insertTuple(t *Tuple, tid TransactionID) error {
 // TODO: some code goes here: Lock and Unlock
 
 func (f *HeapFile) deleteTuple(t *Tuple, tid TransactionID) error {
+	f.mutex.Lock()
+
+	defer f.mutex.Unlock()
 
 	if t.Rid == nil {
 		return GoDBError{TupleNotFoundError, "provided tuple has null rid, cannot delete"}
