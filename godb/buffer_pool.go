@@ -218,8 +218,7 @@ func (bp *BufferPool) tidIsRunning(tid TransactionID) bool {
 func (bp *BufferPool) releaseLocks(tid TransactionID) {
 	for _, status := range bp.pageStatuses {
 		// these methods won't do anything if there is no lock so i can just call them without checking
-		status.releaseSharedLock(tid)
-		status.releaseExclusiveLock(tid)
+		status.releaseLocks(tid)
 	}
 }
 
