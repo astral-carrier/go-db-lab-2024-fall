@@ -5,8 +5,14 @@ exclusive lock (as that is the only transaction blocking A from getting the shar
 lock, it is set to depend on all the transactions holding the shared lock as well as the one holding the exclusive lock,
 as all of these transactions are blocking A from getting the exclusive lock. When transactions commit or abort, they
 release all their locks and delete themselves from the dependency graph.
-Because transactions constantly try and retry to acquire locks, the dependency graph is quite up to date.
+Because transactions constantly try and retry to acquire locks, and the dependency graph is updated after every attempt,
+the dependency graph is quite up to date.
+After transaction A is denied a lock (which is after the graph has been updated), a depth-first-search-based cycle
+detection is run on the graph starting from that transaction. If a cycle is found, a deadlock is detected, and
+transaction A is aborted in an attempt to resolve the deadlock.
 
 I made no changes to the API.
 
-Nothing is missing. I spent about 10 hours on this lab.
+Nothing is missing.
+
+I spent about 10 hours on this lab.
